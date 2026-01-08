@@ -26,7 +26,7 @@
         <div class="w-full max-w-sm px-8 text-center">
             <h1 class="text-3xl font-bold tracking-widest mb-8">DEALER<span class="text-dealer-gold">OS</span></h1>
             <input type="password" id="pinInput" placeholder="••••" maxlength="4" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-4 text-center text-2xl tracking-[1em] mb-4 focus:border-dealer-gold outline-none transition-colors">
-            <button id="btnLogin" onclick="attemptLogin()" class="w-full bg-dealer-gold hover:bg-amber-600 font-bold py-4 rounded-lg shadow-lg transition-transform active:scale-95">INGRESAR</button>
+            <button id="btnLogin" onclick="manualLogin()" class="w-full bg-dealer-gold hover:bg-amber-600 font-bold py-4 rounded-lg shadow-lg transition-transform active:scale-95">INGRESAR</button>
             <p id="loginMsg" class="text-sm mt-4 text-gray-400 min-h-[20px]"></p>
         </div>
     </div>
@@ -176,20 +176,16 @@
             </div>
             <div class="p-6 space-y-6 flex-1 overflow-y-auto scroller">
                 <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</label><p id="lmName" class="text-2xl font-bold text-dealer-sidebar">--</p></div>
-                
                 <div class="grid grid-cols-1 gap-1">
                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contacto</label>
                     <div class="flex items-center gap-2 text-slate-700 font-medium"><i class="fa-brands fa-whatsapp text-green-600"></i> <span id="lmPhone">--</span></div>
                     <div class="flex items-center gap-2 text-slate-500 text-sm"><i class="fa-regular fa-envelope"></i> <span id="lmEmail">--</span></div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4 border-t border-b border-slate-100 py-4">
                     <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo</label><p id="lmType" class="font-bold text-dealer-gold">--</p></div>
                     <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Fecha</label><p id="lmDate" class="text-sm font-medium">--</p></div>
                 </div>
-
                 <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Agenda Cita</label><p id="lmAgenda" class="text-lg font-bold text-slate-700">--</p></div>
-
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Mensaje / Tasación</label>
                     <p id="lmMessage" class="text-sm whitespace-pre-wrap leading-relaxed text-slate-600">--</p>
@@ -212,24 +208,64 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('es-AR');
-            if (localStorage.getItem('dealerOS_session') === 'true') { document.getElementById('loginScreen').classList.add('hidden'); fetchData(); }
+            // SEGURIDAD: Chequeo de sesión al inicio
+            checkSession();
         });
 
-        async function attemptLogin() { 
-            const pin = document.getElementById('pinInput').value;
-            const btn = document.getElementById('btnLogin');
-            const msg = document.getElementById('loginMsg');
-            btn.disabled = true; btn.innerText = "Verificando..."; msg.innerText = "";
+        async function checkSession() {
+            // Usamos sessionStorage (se borra al cerrar la pestaña)
+            const storedPin = sessionStorage.getItem('dealerOS_pin');
+            if (storedPin) {
+                // Validación silenciosa con el PIN guardado
+                verifyPinWithBackend(storedPin, true);
+            }
+        }
+
+        async function verifyPinWithBackend(pin, isAutoLogin) {
+            if(!isAutoLogin) {
+                document.getElementById('btnLogin').disabled = true;
+                document.getElementById('btnLogin').innerText = "Verificando...";
+            }
+
             try {
                 const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', pin: pin }) });
                 const res = await req.json();
+                
                 if (res.status === 'success') {
-                    localStorage.setItem('dealerOS_session','true'); document.getElementById('loginScreen').classList.add('hidden'); fetchData(); 
-                } else { msg.innerText = "Acceso Denegado: PIN Incorrecto"; msg.classList.add('text-red-400'); }
-            } catch(e) { msg.innerText = "Error de conexión"; } finally { btn.disabled = false; btn.innerText = "INGRESAR"; }
+                    // Login exitoso: Guardar en sesión temporal
+                    sessionStorage.setItem('dealerOS_pin', pin); 
+                    document.getElementById('loginScreen').classList.add('hidden'); 
+                    fetchData(); 
+                } else {
+                    if(isAutoLogin) {
+                        // Si falló el auto-login (cambiaron PIN en excel), limpiar y pedir login
+                        sessionStorage.removeItem('dealerOS_pin');
+                        document.getElementById('loginScreen').classList.remove('hidden');
+                    } else {
+                        document.getElementById('loginMsg').innerText = "Acceso Denegado: PIN Incorrecto";
+                        document.getElementById('loginMsg').classList.add('text-red-400');
+                    }
+                }
+            } catch(e) { 
+                if(!isAutoLogin) document.getElementById('loginMsg').innerText = "Error de conexión"; 
+            } finally { 
+                if(!isAutoLogin) {
+                    document.getElementById('btnLogin').disabled = false;
+                    document.getElementById('btnLogin').innerText = "INGRESAR";
+                }
+            }
         }
 
-        function logout() { localStorage.removeItem('dealerOS_session'); location.reload(); }
+        function manualLogin() {
+            const pin = document.getElementById('pinInput').value;
+            verifyPinWithBackend(pin, false);
+        }
+
+        function logout() { 
+            sessionStorage.removeItem('dealerOS_pin'); // Borrar sesión temporal
+            location.reload(); 
+        }
+
         function toggleMobileMenu() { const s=document.getElementById('sidebarMenu'), o=document.getElementById('mobileOverlay'); if(s.classList.contains('-translate-x-full')){s.classList.remove('-translate-x-full');o.classList.remove('hidden')}else{s.classList.add('-translate-x-full');o.classList.add('hidden')} }
         
         function switchView(v) {
