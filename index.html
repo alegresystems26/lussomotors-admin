@@ -16,13 +16,6 @@
         /* Scrollbar styles */
         .scroller::-webkit-scrollbar { width: 6px; } 
         .scroller::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
-        
-        /* Tooltip */
-        .tooltip-container { position: relative; display: inline-block; }
-        .tooltip-bubble { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #334155; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; width: max-content; max-width: 200px; z-index: 50; transition: 0.2s; pointer-events: none; margin-bottom: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); font-weight: normal; line-height: 1.4; text-align: center; }
-        .tooltip-container:hover .tooltip-bubble { visibility: visible; opacity: 1; margin-bottom: 8px; }
-        
-        /* Inputs */
         .input-std { width: 100%; padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; font-size: 0.9rem; }
         .input-std:focus { border-color: #b45309; }
     </style>
@@ -140,16 +133,16 @@
                 <form onsubmit="saveConfig(event)" class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm space-y-6">
                     <h3 class="font-bold border-b pb-2">Parámetros Globales</h3>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Dólar Blue (?)<div class="tooltip-bubble">Valor para la calculadora.</div></label><input id="cfgDolar" type="number" class="input-std"></div>
-                        <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Tasa Anual (?)<div class="tooltip-bubble">Interés anual % para cuotas.</div></label><input id="cfgRate" type="number" class="input-std"></div>
-                        <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Prenda % (?)<div class="tooltip-bubble">Gastos administrativos sobre el auto.</div></label><input id="cfgPledge" type="number" step="0.1" class="input-std"></div>
-                        <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Min. Anticipo (?)<div class="tooltip-bubble">Porcentaje mínimo de entrada.</div></label><input id="cfgMinDown" type="number" class="input-std"></div>
+                        <div><label class="text-xs font-bold text-slate-500">Dólar Blue</label><input id="cfgDolar" type="number" class="input-std"></div>
+                        <div><label class="text-xs font-bold text-slate-500">Tasa Anual</label><input id="cfgRate" type="number" class="input-std"></div>
+                        <div><label class="text-xs font-bold text-slate-500">Prenda %</label><input id="cfgPledge" type="number" step="0.1" class="input-std"></div>
+                        <div><label class="text-xs font-bold text-slate-500">Min. Anticipo</label><input id="cfgMinDown" type="number" class="input-std"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Días Laborales (?)<div class="tooltip-bubble">Separado por coma (0=Dom, 1=Lun...).</div></label><input id="cfgDays" type="text" class="input-std"></div>
-                         <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Horario (Inicio/Fin) (?)<div class="tooltip-bubble">Hora apertura y cierre (formato 24h).</div></label><div class="flex gap-2"><input id="cfgOpen" type="number" class="input-std"><input id="cfgClose" type="number" class="input-std"></div></div>
-                         <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Intervalo (?)<div class="tooltip-bubble">Minutos por turno (ej: 30).</div></label><input id="cfgInterval" type="number" class="input-std"></div>
-                         <div class="tooltip-container w-full"><label class="text-xs font-bold text-slate-500 cursor-help">Cuotas (?)<div class="tooltip-bubble">Opciones de cuotas (ej: 12,24,36).</div></label><input id="cfgInstallments" type="text" class="input-std"></div>
+                         <div><label class="text-xs font-bold text-slate-500">Días Laborales</label><input id="cfgDays" type="text" class="input-std"></div>
+                         <div><label class="text-xs font-bold text-slate-500">Horario (Inicio/Fin)</label><div class="flex gap-2"><input id="cfgOpen" type="number" class="input-std"><input id="cfgClose" type="number" class="input-std"></div></div>
+                         <div><label class="text-xs font-bold text-slate-500">Intervalo</label><input id="cfgInterval" type="number" class="input-std"></div>
+                         <div><label class="text-xs font-bold text-slate-500">Cuotas</label><input id="cfgInstallments" type="text" class="input-std"></div>
                     </div>
                     <button type="submit" id="btnSaveConfig" class="bg-dealer-gold text-white px-6 py-2 rounded font-bold w-full transition-all">GUARDAR</button>
                 </form>
@@ -174,6 +167,42 @@
         </div>
     </div>
 
+    <div id="leadModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50" onclick="toggleModal('leadModal')"></div>
+        <div id="leadModalPanel" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform translate-x-full transition duration-300 flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">Detalle del Lead</h3>
+                <button onclick="toggleModal('leadModal')"><i class="fa-solid fa-xmark text-2xl text-slate-400 hover:text-slate-600"></i></button>
+            </div>
+            <div class="p-6 space-y-6 flex-1 overflow-y-auto scroller">
+                <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cliente</label><p id="lmName" class="text-2xl font-bold text-dealer-sidebar">--</p></div>
+                
+                <div class="grid grid-cols-1 gap-1">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contacto</label>
+                    <div class="flex items-center gap-2 text-slate-700 font-medium"><i class="fa-brands fa-whatsapp text-green-600"></i> <span id="lmPhone">--</span></div>
+                    <div class="flex items-center gap-2 text-slate-500 text-sm"><i class="fa-regular fa-envelope"></i> <span id="lmEmail">--</span></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 border-t border-b border-slate-100 py-4">
+                    <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo</label><p id="lmType" class="font-bold text-dealer-gold">--</p></div>
+                    <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Fecha</label><p id="lmDate" class="text-sm font-medium">--</p></div>
+                </div>
+
+                <div><label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Agenda Cita</label><p id="lmAgenda" class="text-lg font-bold text-slate-700">--</p></div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Mensaje / Tasación</label>
+                    <p id="lmMessage" class="text-sm whitespace-pre-wrap leading-relaxed text-slate-600">--</p>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-slate-50">
+                <a id="lmWhatsapp" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-green-200">
+                    <i class="fa-brands fa-whatsapp text-xl"></i> Responder por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+
     <style>.kpi-card { background: white; padding: 1.25rem; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); } .kpi-card p { font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; } .kpi-card h3 { font-size: 1.875rem; font-weight: 700; color: #1e293b; } .nav-btn { width: 100%; display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border-radius: 0.5rem; transition: all 0.2s; text-align: left; } .nav-btn:hover { background: #1e293b; color: white; }</style>
 
     <script>
@@ -183,38 +212,21 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('es-AR');
-            // Validar sesión, pero no cargar datos hasta verificar token/pin si fuera JWT, aquí simplificado
-            if (localStorage.getItem('dealerOS_session') === 'true') { 
-                document.getElementById('loginScreen').classList.add('hidden'); 
-                fetchData(); 
-            }
+            if (localStorage.getItem('dealerOS_session') === 'true') { document.getElementById('loginScreen').classList.add('hidden'); fetchData(); }
         });
 
-        // LOGIN SEGURO CONTRA EXCEL
         async function attemptLogin() { 
             const pin = document.getElementById('pinInput').value;
             const btn = document.getElementById('btnLogin');
             const msg = document.getElementById('loginMsg');
-            
             btn.disabled = true; btn.innerText = "Verificando..."; msg.innerText = "";
-
             try {
                 const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', pin: pin }) });
                 const res = await req.json();
-                
                 if (res.status === 'success') {
-                    localStorage.setItem('dealerOS_session','true'); 
-                    document.getElementById('loginScreen').classList.add('hidden'); 
-                    fetchData(); 
-                } else {
-                    msg.innerText = "Acceso Denegado: PIN Incorrecto";
-                    msg.classList.add('text-red-400');
-                }
-            } catch(e) {
-                msg.innerText = "Error de conexión";
-            } finally {
-                btn.disabled = false; btn.innerText = "INGRESAR";
-            }
+                    localStorage.setItem('dealerOS_session','true'); document.getElementById('loginScreen').classList.add('hidden'); fetchData(); 
+                } else { msg.innerText = "Acceso Denegado: PIN Incorrecto"; msg.classList.add('text-red-400'); }
+            } catch(e) { msg.innerText = "Error de conexión"; } finally { btn.disabled = false; btn.innerText = "INGRESAR"; }
         }
 
         function logout() { localStorage.removeItem('dealerOS_session'); location.reload(); }
@@ -236,34 +248,26 @@
                 const r = await fetch(API_URL); const j = await r.json();
                 if (j.status === 'success') {
                     globalData = { inventory: j.data, leads: j.leads, stats: j.meta.stats };
-                    
                     document.getElementById('kpi-cars').innerText = j.meta.stats.active_cars;
                     document.getElementById('kpi-sold').innerText = j.meta.stats.sold_cars;
                     document.getElementById('kpi-leads-count').innerText = j.meta.stats.pending_leads;
                     document.getElementById('kpi-invested').innerText = fmtMoney(j.meta.stats.invested);
                     document.getElementById('kpi-profit').innerText = fmtMoney(j.meta.stats.profit);
-                    
                     updateGoalsUI(j.meta.stats);
-
                     const f = j.meta.finance, a = j.meta.agenda;
                     document.getElementById('cfgDolar').value = f.DOLAR_BLUE; document.getElementById('cfgRate').value = f.annual_rate;
                     document.getElementById('cfgPledge').value = f.pledge_fee_pct; document.getElementById('cfgMinDown').value = f.min_down_payment_pct;
                     document.getElementById('cfgDays').value = a.workingDays.join(','); document.getElementById('cfgOpen').value = a.startHour;
                     document.getElementById('cfgClose').value = a.endHour; document.getElementById('cfgInterval').value = a.interval;
                     document.getElementById('cfgInstallments').value = f.installments.join(',');
-
-                    renderInventory(globalData.inventory);
-                    renderLeads(globalData.leads);
-                    initChart(j.meta.stats.active_cars, j.meta.stats.sold_cars);
+                    renderInventory(globalData.inventory); renderLeads(globalData.leads); initChart(j.meta.stats.active_cars, j.meta.stats.sold_cars);
                 }
             } catch(e) { console.error(e); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); }
         }
 
         function updateGoalsUI(stats) {
             const sold = stats.sold_cars, gCar = stats.goal_cars, money = stats.profit, gMoney = stats.goal_money;
-            const pctCar = Math.min(100, Math.round((sold/gCar)*100)) || 0;
-            const pctMoney = Math.min(100, Math.round((money/gMoney)*100)) || 0;
-
+            const pctCar = Math.min(100, Math.round((sold/gCar)*100)) || 0; const pctMoney = Math.min(100, Math.round((money/gMoney)*100)) || 0;
             document.getElementById('txtSold').innerText = sold; document.getElementById('targetSold').innerText = gCar;
             document.getElementById('pctSold').innerText = pctCar + '%'; document.getElementById('barSold').style.width = pctCar + '%';
             document.getElementById('txtMoney').innerText = fmtMoney(money); document.getElementById('targetMoney').innerText = fmtMoney(gMoney);
@@ -272,12 +276,9 @@
         }
 
         async function saveGoals(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnSaveGoals');
-            setLoading(btn, true);
+            e.preventDefault(); const btn = document.getElementById('btnSaveGoals'); setLoading(btn, true);
             const d = { action:'update_goals', goal_cars: document.getElementById('inpGoalCars').value, goal_money: document.getElementById('inpGoalMoney').value };
-            await fetch(API_URL, {method:'POST', body:JSON.stringify(d)}); 
-            toggleGoalsEdit(); fetchData(); setLoading(btn, false, "Guardar");
+            await fetch(API_URL, {method:'POST', body:JSON.stringify(d)}); toggleGoalsEdit(); fetchData(); setLoading(btn, false, "Guardar");
         }
         function toggleGoalsEdit() { document.getElementById('goalsForm').classList.toggle('hidden'); }
 
@@ -297,27 +298,26 @@
             });
         }
         function filterInventory() {
-            const txt = document.getElementById('filterInvText').value.toLowerCase();
-            const st = document.getElementById('filterInvStatus').value;
+            const txt = document.getElementById('filterInvText').value.toLowerCase(); const st = document.getElementById('filterInvStatus').value;
             const res = globalData.inventory.filter(c => (c.brand.toLowerCase().includes(txt) || c.model.toLowerCase().includes(txt)) && (st === '' || c.status === st));
             renderInventory(res);
         }
 
+        // --- NEW LEADS RENDER (WITH MODAL LINK) ---
         function renderLeads(data) {
             const tb = document.getElementById('leadsTableBody'); tb.innerHTML = '';
             data.forEach(l => {
-                const toolTip = l.message ? `<div class="tooltip-container relative"><span class="font-bold cursor-help underline decoration-dotted">${l.name}</span><div class="tooltip-bubble">${l.message}</div></div>` : l.name;
-                // Agenda Display limpio desde Backend
                 const agenda = (l.agenda_display && l.agenda_display !== '-') ? `<span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${l.agenda_display}</span>` : '-';
-                
                 const options = ['NUEVO','CONTACTADO','CITA','VENDIDO','PERDIDO'].map(s => `<option value="${s}" ${l.status===s?'selected':''}>${s}</option>`).join('');
                 
                 tb.insertAdjacentHTML('beforeend', `
                     <tr class="hover:bg-slate-50 border-b border-slate-50">
-                        <td class="p-4 text-xs whitespace-nowrap">${l.date_str}</td>
-                        <td class="p-4">${toolTip}</td>
+                        <td class="p-4 text-xs whitespace-nowrap text-slate-500">${l.date_str}</td>
+                        <td class="p-4">
+                            <button onclick="openLeadModal('${l.id}')" class="font-bold text-dealer-gold hover:underline text-left">${l.name}</button>
+                        </td>
                         <td class="p-4 text-sm">
-                            <a href="https://wa.me/${l.phone.replace(/[^0-9]/g,'')}" target="_blank" class="text-green-600 font-bold hover:underline"><i class="fa-brands fa-whatsapp"></i> ${l.phone}</a>
+                            <div class="flex items-center gap-1 text-green-600 font-bold"><i class="fa-brands fa-whatsapp"></i> ${l.phone}</div>
                             <div class="text-xs text-slate-400 mt-1">${l.email}</div>
                         </td>
                         <td class="p-4 text-xs font-bold text-slate-600 uppercase">${l.type}</td>
@@ -327,6 +327,22 @@
                     </tr>`);
             });
         }
+        
+        // --- LEAD MODAL LOGIC ---
+        function openLeadModal(id) {
+            const l = globalData.leads.find(x => String(x.id) === String(id));
+            if(!l) return;
+            document.getElementById('lmName').innerText = l.name;
+            document.getElementById('lmPhone').innerText = l.phone;
+            document.getElementById('lmEmail').innerText = l.email;
+            document.getElementById('lmType').innerText = l.type;
+            document.getElementById('lmDate').innerText = l.date_str;
+            document.getElementById('lmAgenda').innerText = l.agenda_display;
+            document.getElementById('lmMessage').innerText = l.message || "Sin mensaje.";
+            document.getElementById('lmWhatsapp').href = `https://wa.me/${l.phone.replace(/[^0-9]/g,'')}`;
+            toggleModal('leadModal');
+        }
+
         function filterLeads() {
             const txt = document.getElementById('filterLeadText').value.toLowerCase();
             const type = document.getElementById('filterLeadType').value;
@@ -348,30 +364,22 @@
         function toggleModal(id) { const m=document.getElementById(id), p=m.querySelector('div[id$="Panel"]'); if(m.classList.contains('hidden')){m.classList.remove('hidden');setTimeout(()=>p.classList.remove('translate-x-full'),10)}else{p.classList.add('translate-x-full');setTimeout(()=>m.classList.add('hidden'),300)} }
 
         async function submitCar() {
-            const btn = document.getElementById('btnSubmitCar');
-            setLoading(btn, true);
+            const btn = document.getElementById('btnSubmitCar'); setLoading(btn, true);
             const f = document.getElementById('addCarForm'), fd = new FormData(f), d = Object.fromEntries(fd.entries());
             d.action = d.id ? 'edit_inventory' : 'add_inventory';
-            await fetch(API_URL, {method:'POST', body:JSON.stringify(d)}); toggleModal('carModal'); fetchData();
-            setLoading(btn, false, "GUARDAR");
+            await fetch(API_URL, {method:'POST', body:JSON.stringify(d)}); toggleModal('carModal'); fetchData(); setLoading(btn, false, "GUARDAR");
         }
         async function saveConfig(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnSaveConfig');
-            setLoading(btn, true);
+            e.preventDefault(); const btn = document.getElementById('btnSaveConfig'); setLoading(btn, true);
             const pl = { action:'update_config', dolar:document.getElementById('cfgDolar').value, rate:document.getElementById('cfgRate').value, pledge:document.getElementById('cfgPledge').value, min_down:document.getElementById('cfgMinDown').value, days:document.getElementById('cfgDays').value, open_hour:document.getElementById('cfgOpen').value, close_hour:document.getElementById('cfgClose').value, interval:document.getElementById('cfgInterval').value, installments:document.getElementById('cfgInstallments').value };
-            await fetch(API_URL, {method:'POST', body:JSON.stringify(pl)}); fetchData(); alert('Guardado');
-            setLoading(btn, false, "GUARDAR");
+            await fetch(API_URL, {method:'POST', body:JSON.stringify(pl)}); fetchData(); alert('Guardado'); setLoading(btn, false, "GUARDAR");
         }
         async function deleteItem(id, act) { if(confirm('¿Borrar?')) { await fetch(API_URL, {method:'POST', body:JSON.stringify({action:act, id:id})}); fetchData(); } }
         async function updateLeadStatus(id, sel) { await fetch(API_URL, {method:'POST', body:JSON.stringify({action:'update_lead_status', id:id, status:sel.value})}); }
 
         function initChart(a,s) { if(salesChart) salesChart.destroy(); salesChart = new Chart(document.getElementById('salesChart'), {type:'doughnut', data:{labels:['Stock','Vendido'], datasets:[{data:[a,s], backgroundColor:['#6366f1','#10b981']}]}, options:{maintainAspectRatio:false}}); }
         function fmtMoney(n) { return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0}).format(n); }
-        function setLoading(btn, isLoading, txt) {
-            if(isLoading) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...'; }
-            else { btn.disabled = false; btn.innerHTML = txt || 'Guardar'; }
-        }
+        function setLoading(btn, isLoading, txt) { if(isLoading) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...'; } else { btn.disabled = false; btn.innerHTML = txt || 'Guardar'; } }
     </script>
 </body>
 </html>
